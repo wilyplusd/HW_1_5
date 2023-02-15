@@ -1,57 +1,58 @@
 enum class ListPostType {
     post, copy, reply, postpone, suggest
 }
-
 enum class TypeAttachment {
     photo, video, file, link, audio
 }
-
 interface Attachment {
     val type: TypeAttachment
-    val id: Int
-    val ownerId: Int
-    val title: String
+}
+open class AudioAttachment(open val audio: Audio) : Attachment {
+    override val type: TypeAttachment = TypeAttachment.audio
+}
+open class VideoAttachment(open val video: Video) : Attachment {
+    override val type: TypeAttachment = TypeAttachment.video
+}
+open class FileAttachment(open val file: File) : Attachment {
+    override val type: TypeAttachment = TypeAttachment.file
 }
 
-class Photo(
-    override val type: TypeAttachment = TypeAttachment.photo,
-    override val id: Int,
-    override val ownerId: Int,
-    override val title: String,
+open class LinkAttachment(open val link: Link) : Attachment {
+    override val type: TypeAttachment = TypeAttachment.link
+}
+open class PhotoAttachment(open val photo: Photo) : Attachment {
+    override val type: TypeAttachment = TypeAttachment.photo
+}
+data class Audio(
+    val id: Int,
+    val duration: Int,
+    val artist: String,
+)
+data class Photo(
+    val id: Int,
+    val ownerId: Int,
+    val title: String,
     val albumId: Int? = null
-) : Attachment {}
-
-class Video(
-    override val type: TypeAttachment,
-    override val id: Int,
-    override val ownerId: Int,
-    override val title: String,
+)
+data class Video(
+    val id: Int,
+    val ownerId: Int,
+    val title: String,
     val albumId: Int? = null
-) : Attachment {}
-
-class Audio(
-    override val type: TypeAttachment,
-    override val id: Int,
-    override val ownerId: Int,
-    override val title: String,
-    val albumId: Int? = null
-) : Attachment {}
-
-class File(
-    override val type: TypeAttachment,
-    override val id: Int,
-    override val ownerId: Int,
-    override val title: String,
+)
+data class File(
+    val id: Int,
+    val ownerId: Int,
+    val title: String,
     val url: String
-) : Attachment {}
+)
 
-class Link(
-    override val type: TypeAttachment,
-    override val id: Int,
-    override val ownerId: Int,
-    override val title: String,
+data class Link(
+    val id: Int,
+    val ownerId: Int,
+    val title: String,
     val url: String
-) : Attachment {}
+)
 
 data class CommentPost(
     val count: Long = 0,
@@ -103,7 +104,7 @@ data class Post(
     val copyright: Copyright? = null, //Источник материала, объект с полями
     val postType: ListPostType = ListPostType.post,
     val geo: Geo? = null,
-    val attachment: Array<Video>? = null,
+    val attachment: Array<Attachment>? = null,
     val signerI: Int? = null, //Идентификатор автора, если запись была опубликована от имени сообщества и подписана пользователем
     val copyHistory: Array<Repost>? = null, //Массив, содержащий историю репостов для записи.
     val canPin: Boolean = false, //Информация о том, может ли текущий пользователь закрепить запись
@@ -163,7 +164,7 @@ object WallService {
 
 fun main() {
     WallService.addPost(Post(ownerID = 111, fromID = 222, date = "12.02.2020", replyOwnerId = 133, text = "text1"))
-    val video = Video(type = TypeAttachment.video, id = 1231, ownerId = 222, title = "audio")
+    val video = VideoAttachment(Video(id = 1231, ownerId = 222, title = "audio"))
     WallService.addPost(
         Post(
             ownerID = 222,
