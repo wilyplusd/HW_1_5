@@ -1,18 +1,23 @@
 enum class ListPostType {
     post, copy, reply, postpone, suggest
 }
+
 enum class TypeAttachment {
     photo, video, file, link, audio
 }
+
 interface Attachment {
     val type: TypeAttachment
 }
+
 open class AudioAttachment(open val audio: Audio) : Attachment {
     override val type: TypeAttachment = TypeAttachment.audio
 }
+
 open class VideoAttachment(open val video: Video) : Attachment {
     override val type: TypeAttachment = TypeAttachment.video
 }
+
 open class FileAttachment(open val file: File) : Attachment {
     override val type: TypeAttachment = TypeAttachment.file
 }
@@ -20,26 +25,31 @@ open class FileAttachment(open val file: File) : Attachment {
 open class LinkAttachment(open val link: Link) : Attachment {
     override val type: TypeAttachment = TypeAttachment.link
 }
+
 open class PhotoAttachment(open val photo: Photo) : Attachment {
     override val type: TypeAttachment = TypeAttachment.photo
 }
+
 data class Audio(
     val id: Int,
     val duration: Int,
     val artist: String,
 )
+
 data class Photo(
     val id: Int,
     val ownerId: Int,
     val title: String,
     val albumId: Int? = null
 )
+
 data class Video(
     val id: Int,
     val ownerId: Int,
     val title: String,
     val albumId: Int? = null
 )
+
 data class File(
     val id: Int,
     val ownerId: Int,
@@ -104,7 +114,7 @@ data class Post(
     val copyright: Copyright? = null, //Источник материала, объект с полями
     val postType: ListPostType = ListPostType.post,
     val geo: Geo? = null,
-    val attachment: Array<Attachment>? = null,
+    val attachment: List<Attachment>? = null,
     val signerI: Int? = null, //Идентификатор автора, если запись была опубликована от имени сообщества и подписана пользователем
     val copyHistory: Array<Repost>? = null, //Массив, содержащий историю репостов для записи.
     val canPin: Boolean = false, //Информация о том, может ли текущий пользователь закрепить запись
@@ -114,7 +124,7 @@ data class Post(
     val isFavorite: Boolean = false,
     // Поля post_source, donut не добавляла
 
-)
+) {}
 
 object WallService {
     private var posts = emptyArray<Post>()
@@ -134,6 +144,9 @@ object WallService {
         var status: Boolean = false
         for ((index, post) in posts.withIndex()) {
             if (post.id == updatedPost.id) {
+                val listAttachment: MutableList<Attachment> = ArrayList()
+                post.attachment?.let { listAttachment.addAll(it) }
+                updatedPost.attachment?.let { listAttachment.addAll(it) }
                 posts[index] = post.copy(
                     friendsOnly = updatedPost.friendsOnly, //если запись была создана с опцией «Только для друзей
                     text = updatedPost.text,
@@ -141,6 +154,24 @@ object WallService {
                     comments = updatedPost.comments,
                     views = updatedPost.views,
                     reposts = updatedPost.reposts,
+                    fromID = updatedPost.fromID,
+                    ownerID = updatedPost.ownerID,
+                    canDelete = updatedPost.canDelete,
+                    canEdit = updatedPost.canEdit,
+                    canPin = updatedPost.canPin,
+                    copyHistory = updatedPost.copyHistory,
+                    copyright = updatedPost.copyright,
+                    date = updatedPost.date,
+                    geo = updatedPost.geo,
+                    postType = updatedPost.postType,
+                    replyPostId = updatedPost.replyPostId,
+                    isFavorite = updatedPost.isFavorite,
+                    signerI = updatedPost.signerI,
+                    isPinned = updatedPost.isPinned,
+                    markedAsAds = updatedPost.markedAsAds,
+                    postponedId = updatedPost.postponedId,
+                    replyOwnerId = updatedPost.replyOwnerId,
+                    attachment = listAttachment
                 )
                 status = true
             }
@@ -157,14 +188,17 @@ object WallService {
         return listPost
     }
 
+
     fun clear() {
         posts = emptyArray()
     }
 }
 
+
+
 fun main() {
-    WallService.addPost(Post(ownerID = 111, fromID = 222, date = "12.02.2020", replyOwnerId = 133, text = "text1"))
-    val video = VideoAttachment(Video(id = 1231, ownerId = 222, title = "audio"))
+    val video: Attachment = VideoAttachment(Video(id = 1231, ownerId = 222, title = "audio"))
+    val audio: Attachment = AudioAttachment(Audio(id = 122, duration = 3, artist = "Singer"))
     WallService.addPost(
         Post(
             ownerID = 222,
@@ -172,7 +206,7 @@ fun main() {
             date = "01.02.2023",
             replyOwnerId = 13333,
             text = "text1",
-            attachment = arrayOf(video)
+            attachment = listOf(video)
         )
     )
     WallService.updatePost(
@@ -182,8 +216,10 @@ fun main() {
             fromID = 0,
             date = "14.02.2020",
             friendsOnly = true,
-            text = "text3"
+            text = "text3",
+            attachment = listOf(audio)
         )
     )
     print(WallService.returnListPost())
 }
+
